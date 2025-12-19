@@ -67,6 +67,7 @@ const App: React.FC = () => {
   const [poemImage, setPoemImage] = useState<string>('');
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [customStyle, setCustomStyle] = useState<string>('');
+  const [isImageZoomed, setIsImageZoomed] = useState(false);
 
   // Audio states
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
@@ -83,13 +84,22 @@ const App: React.FC = () => {
     };
   }, []);
 
-  const generateNewSeeds = () => {
+  const generateNewSeeds = useCallback(() => {
+    // 產生 1-100 的數字陣列
+    const numbers = Array.from({ length: 100 }, (_, i) => i + 1);
+    // Fisher-Yates shuffle 洗牌算法
+    for (let i = numbers.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+    }
+
+    // 取前 26 個不重複的數字配對給 A-Z
     const seeds: RandomSeed[] = Array.from({ length: 26 }, (_, i) => ({
       letter: String.fromCharCode(65 + i),
-      number: Math.floor(Math.random() * 100) + 1
+      number: numbers[i]
     }));
     setRandomSeeds(seeds);
-  };
+  }, []);
 
   const resetApp = () => {
     setQuestion('');
@@ -204,7 +214,12 @@ const App: React.FC = () => {
       audioSourceRef.current.stop();
     }
 
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+
+    // 移動端瀏覽器可能會暫停 AudioContext，需要手動恢復
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
     const source = ctx.createBufferSource();
     source.buffer = targetBuffer;
 
@@ -438,13 +453,21 @@ const App: React.FC = () => {
               ))}
             </div>
 
-            <div className="pt-10 border-t border-slate-700/50">
-              <button
-                onClick={() => setShowSeeds(!showSeeds)}
-                className="text-xs text-slate-500 hover:text-amber-400 transition-colors italic"
-              >
-                {showSeeds ? '閉嘴，大師不想讓你看底牌 🤫' : '想看電腦是怎麼作弊...喔不，隨機的嗎？🔍'}
-              </button>
+            <div className="pt-10 border-t border-slate-700/50 flex flex-col items-center gap-4">
+              <div className="flex gap-4">
+                <button
+                  onClick={generateNewSeeds}
+                  className="px-4 py-2 bg-slate-800 text-amber-500/80 rounded-full text-xs hover:bg-slate-700 hover:text-amber-400 transition-all flex items-center border border-slate-700"
+                >
+                  <span className="mr-1">🔄</span> 重新洗牌
+                </button>
+                <button
+                  onClick={() => setShowSeeds(!showSeeds)}
+                  className="text-xs text-slate-500 hover:text-amber-400 transition-colors italic border-b border-transparent hover:border-amber-400"
+                >
+                  {showSeeds ? '閉嘴，大師不想讓你看底牌 🤫' : '想看電腦是怎麼生成的隨機數字嗎？🔍'}
+                </button>
+              </div>
               {showSeeds && (
                 <div className="mt-6 grid grid-cols-5 text-[10px] gap-2 text-slate-500 bg-slate-900/50 p-6 rounded-2xl border border-slate-700/30">
                   {randomSeeds.map(s => <span key={s.letter} className="bg-slate-800/50 p-1 rounded">{s.letter}: {s.number}</span>)}
@@ -469,7 +492,7 @@ const App: React.FC = () => {
 
             <div className="p-10 bg-slate-900/60 rounded-[2rem] border border-slate-700/50 shadow-2xl relative overflow-hidden group">
               <div className="absolute top-0 left-0 w-2 h-full bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]"></div>
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                 <h3 className="text-2xl font-black text-amber-400 flex items-center italic">
                   <span className="text-3xl mr-3">🕶️</span> 大師開示
                 </h3>
@@ -507,10 +530,10 @@ const App: React.FC = () => {
             <div className="space-y-6">
               {poemImage && (
                 <div className="flex flex-col items-center space-y-4">
-                  <div className="relative p-2 bg-gradient-to-b from-amber-500 to-amber-700 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                  <div className="relative p-2 bg-gradient-to-b from-amber-500 to-amber-700 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-zoom-in" onClick={() => setIsImageZoomed(true)}>
                     <img src={poemImage} alt="籤詩意象" className="max-w-md w-full rounded-2xl grayscale-[0.2] hover:grayscale-0 transition-all duration-700" />
                   </div>
-                  <p className="text-slate-500 text-xs tracking-widest uppercase">Sacred Art Generated by AI</p>
+                  <p className="text-slate-500 text-xs tracking-widest uppercase">Sacred Art Generated by AI (點擊放大)</p>
                 </div>
               )}
 
@@ -561,6 +584,32 @@ const App: React.FC = () => {
         )}
 
       </main>
+
+      {/* Zoom Modal */}
+      {isImageZoomed && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 cursor-zoom-out animate-in fade-in duration-300"
+          onClick={() => setIsImageZoomed(false)}
+        >
+          <div className="relative max-w-full max-h-full flex flex-col items-center">
+            <img
+              src={poemImage}
+              alt="籤詩意象大圖"
+              className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl border-2 border-slate-700"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <p className="text-amber-500/80 mt-4 font-light tracking-widest uppercase text-sm">Sacred Art Generated by AI</p>
+            <button
+              className="absolute -top-12 right-0 text-slate-400 hover:text-white p-2"
+              onClick={() => setIsImageZoomed(false)}
+            >
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       <footer className="mt-16 text-slate-500 text-sm text-center space-y-2">
         <p className="tracking-widest">© 靈曦籤苑 · Powered by Gemini AI Intelligence</p>
