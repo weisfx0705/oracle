@@ -1,0 +1,7 @@
+{
+  "name": "靈曦籤苑 - 觀音百籤解惑",
+  "description": "一個結合傳統觀音靈籤與現代 AI 技術的複合解籤服務。提供語音輸入、隨機抽籤、深度 AI 解籤以及立體紙雕藝術風格的籤詩生成。",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
