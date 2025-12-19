@@ -72,8 +72,10 @@ const App: React.FC = () => {
   // Audio states
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -109,6 +111,7 @@ const App: React.FC = () => {
     setSelectedLetter(null);
     setCustomStyle('');
     setAudioBuffer(null);
+    setAudioBlob(null);
     if (audioSourceRef.current) audioSourceRef.current.stop();
     setIsPlaying(false);
     generateNewSeeds();
@@ -191,12 +194,23 @@ const App: React.FC = () => {
 
     // 生成解籤後的語音總結並自動播放
     setIsGeneratingAudio(true);
-    const buffer = await generateInterpretationAudio(apiKey, result);
-    setAudioBuffer(buffer);
-    setIsGeneratingAudio(false);
 
-    if (buffer) {
-      playMasterVoice(buffer);
+    // Initialize AudioContext early to capture user gesture
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    if (audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume();
+    }
+
+    const audioResult = await generateInterpretationAudio(apiKey, result, audioContextRef.current);
+    if (audioResult) {
+      setAudioBuffer(audioResult.buffer);
+      setAudioBlob(audioResult.blob);
+      setIsGeneratingAudio(false);
+      playMasterVoice(audioResult.buffer);
+    } else {
+      setIsGeneratingAudio(false);
     }
   };
 
@@ -214,7 +228,11 @@ const App: React.FC = () => {
       audioSourceRef.current.stop();
     }
 
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // Use persistent AudioContext
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    const ctx = audioContextRef.current;
 
     // 移動端瀏覽器可能會暫停 AudioContext，需要手動恢復
     if (ctx.state === 'suspended') {
@@ -223,13 +241,22 @@ const App: React.FC = () => {
     const source = ctx.createBufferSource();
     source.buffer = targetBuffer;
 
-    source.playbackRate.value = 1.15;
 
     source.connect(ctx.destination);
     source.onended = () => setIsPlaying(false);
     source.start();
     audioSourceRef.current = source;
     setIsPlaying(true);
+  };
+
+  const downloadAudio = () => {
+    if (!audioBlob) return;
+    const url = URL.createObjectURL(audioBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `靈曦籤苑_大師開示_${new Date().getTime()}.wav`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleGenerateImage = async () => {
@@ -498,19 +525,32 @@ const App: React.FC = () => {
                 </h3>
 
                 {(audioBuffer || isGeneratingAudio) && (
-                  <button
-                    onClick={() => playMasterVoice()}
-                    disabled={isGeneratingAudio}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-full border border-amber-500/30 transition-all ${isPlaying ? 'bg-amber-500 text-slate-900' : 'bg-slate-800 text-amber-400 hover:bg-slate-700'}`}
-                  >
-                    {isGeneratingAudio ? (
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                    ) : isPlaying ? (
-                      <><span className="text-xl">⏸️</span> <span className="text-sm font-bold">停止播放</span></>
-                    ) : (
-                      <><span className="text-xl">🔊</span> <span className="text-sm font-bold">重聽大師總結</span></>
+                  <div className="flex gap-2">
+                    {audioBlob && !isGeneratingAudio && (
+                      <button
+                        onClick={downloadAudio}
+                        className="flex items-center justify-center w-10 h-10 rounded-full border border-amber-500/30 bg-slate-800 text-amber-400 hover:bg-slate-700 transition-all"
+                        title="下載音檔"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                      </button>
                     )}
-                  </button>
+                    <button
+                      onClick={() => playMasterVoice()}
+                      disabled={isGeneratingAudio}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-full border border-amber-500/30 transition-all ${isPlaying ? 'bg-amber-500 text-slate-900' : 'bg-slate-800 text-amber-400 hover:bg-slate-700'}`}
+                    >
+                      {isGeneratingAudio ? (
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                      ) : isPlaying ? (
+                        <><span className="text-xl">⏸️</span> <span className="text-sm font-bold">停止播放</span></>
+                      ) : (
+                        <><span className="text-xl">🔊</span> <span className="text-sm font-bold">播放大師總結</span></>
+                      )}
+                    </button>
+                  </div>
                 )}
               </div>
 

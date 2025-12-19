@@ -68,6 +68,7 @@ export const generatePoemImage = async (apiKey: string, poem: Poem, customStyle:
 };
 
 // --- TTS Helpers ---
+// --- TTS Helpers ---
 function decodeBase64(base64: string) {
   const binaryString = atob(base64);
   const len = binaryString.length;
@@ -76,6 +77,50 @@ function decodeBase64(base64: string) {
     bytes[i] = binaryString.charCodeAt(i);
   }
   return bytes;
+}
+
+function writeString(view: DataView, offset: number, string: string) {
+  for (let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
+}
+
+function createWavBlob(samples: Uint8Array, sampleRate: number, numChannels: number): Blob {
+  const buffer = new ArrayBuffer(44 + samples.length);
+  const view = new DataView(buffer);
+
+  // RIFF identifier
+  writeString(view, 0, 'RIFF');
+  // file length
+  view.setUint32(4, 36 + samples.length, true);
+  // RIFF type
+  writeString(view, 8, 'WAVE');
+  // format chunk identifier
+  writeString(view, 12, 'fmt ');
+  // format chunk length
+  view.setUint32(16, 16, true);
+  // sample format (raw)
+  view.setUint16(20, 1, true);
+  // channel count
+  view.setUint16(22, numChannels, true);
+  // sample rate
+  view.setUint32(24, sampleRate, true);
+  // byte rate (sampleRate * blockAlign)
+  view.setUint32(28, sampleRate * numChannels * 2, true);
+  // block align (channel count * bytes per sample)
+  view.setUint16(32, numChannels * 2, true);
+  // bits per sample
+  view.setUint16(34, 16, true);
+  // data chunk identifier
+  writeString(view, 36, 'data');
+  // data chunk length
+  view.setUint32(40, samples.length, true);
+
+  // write the PCM samples
+  const rawBytes = new Uint8Array(buffer);
+  rawBytes.set(samples, 44);
+
+  return new Blob([buffer], { type: 'audio/wav' });
 }
 
 async function decodeAudioData(
@@ -97,7 +142,11 @@ async function decodeAudioData(
   return buffer;
 }
 
-export const generateInterpretationAudio = async (apiKey: string, interpretation: string): Promise<AudioBuffer | null> => {
+export const generateInterpretationAudio = async (
+  apiKey: string,
+  interpretation: string,
+  existingContext?: AudioContext
+): Promise<{ buffer: AudioBuffer, blob: Blob } | null> => {
   const ai = new GoogleGenAI({ apiKey });
 
   // 1. 先生成 150 字的幽默總結文本
@@ -129,14 +178,20 @@ export const generateInterpretationAudio = async (apiKey: string, interpretation
 
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     if (base64Audio) {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+      const rawData = decodeBase64(base64Audio);
+      // Use existing context if provided, otherwise create a temporary one for decoding
+      const audioCtx = existingContext || new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+
       const audioBuffer = await decodeAudioData(
-        decodeBase64(base64Audio),
+        rawData,
         audioCtx,
         24000,
         1,
       );
-      return audioBuffer;
+
+      const audioBlob = createWavBlob(rawData, 24000, 1);
+
+      return { buffer: audioBuffer, blob: audioBlob };
     }
   } catch (error) {
     console.error("TTS Error:", error);
