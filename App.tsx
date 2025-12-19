@@ -284,9 +284,9 @@ const App: React.FC = () => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>靈曦籤苑 - 解籤結果</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
         body { 
-            font-family: 'Noto Serif TC', serif; 
+            font-family: 'Noto Sans TC', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'noto sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'; 
             padding: 20px; 
             background: #020617; 
             color: #f1f5f9; 
@@ -376,6 +376,7 @@ const App: React.FC = () => {
             <p>© 靈曦籤苑 · 由 Gemini AI 驅動深層智慧</p>
             <p><a href="https://weisfx0705.github.io/chiawei/">義守大學陳嘉暐老師開發</a></p>
             <p style="font-style: italic; opacity: 0.6; margin-top: 16px;">「一切法從心想生，解籤僅供參考，未來掌握在您手中。」</p>
+            <p style="opacity: 0.4; margin-top: 8px; font-size: 0.7rem;">Version: 12/19/2025</p>
         </div>
     </div>
 </body>
@@ -419,7 +420,7 @@ const App: React.FC = () => {
         <div className="flex justify-center mb-4">
           <SVGS.Lotus />
         </div>
-        <h1 className="text-6xl font-black font-calligraphy text-amber-500 mb-2 tracking-widest drop-shadow-[0_2px_10px_rgba(245,158,11,0.5)]">靈曦籤苑</h1>
+        <h1 className="text-6xl font-black font-serif text-amber-500 mb-2 tracking-widest drop-shadow-[0_2px_10px_rgba(245,158,11,0.5)]">靈曦籤苑</h1>
         <p className="text-amber-200/60 tracking-[0.4em] font-light uppercase">Mystical Oracle of Guanyin</p>
       </header>
 
@@ -512,7 +513,7 @@ const App: React.FC = () => {
               </div>
               <div className="space-y-6 text-center">
                 {poemResult.content.map((line, idx) => (
-                  <p key={idx} className="text-4xl md:text-5xl font-calligraphy text-amber-100 tracking-[0.2em] drop-shadow-lg">{line}</p>
+                  <p key={idx} className="text-4xl md:text-5xl font-serif text-amber-100 tracking-[0.2em] drop-shadow-lg">{line}</p>
                 ))}
               </div>
             </div>
@@ -659,6 +660,7 @@ const App: React.FC = () => {
           </a>
         </p>
         <p className="opacity-40 italic">「大師的話僅供參考，真的受傷了大師是不賠的。」💁‍♂️</p>
+        <p className="opacity-30 text-xs">Version: 12/19/2025</p>
       </footer>
     </div>
   );
