@@ -3,6 +3,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { AppStep, Poem, RandomSeed } from './types';
 import { POEMS, SVGS } from './constants';
 import { getGeminiInterpretation, generatePoemImage, generateInterpretationAudio } from './services/geminiService';
+import { unlock, playSfx, getAudioContext } from './services/AudioGate';
 import { SettingsModal } from './components/SettingsModal';
 
 // 隨機範例清單
@@ -183,6 +184,15 @@ const App: React.FC = () => {
   };
 
   const handlePick = async (letter: string) => {
+    // 1. Play sound immediately on user interaction
+    // Using import.meta.url to ensure correct path resolution for assets
+    const shuffleSoundUrl = new URL('./sound/shuffle.mp3', import.meta.url).href;
+
+    // Unlock and play sound (await unlock ensures context is valid)
+    // We await here to catch the user gesture for the AudioContext resume
+    await unlock();
+    playSfx(shuffleSoundUrl, { volume: 0.8 });
+
     setSelectedLetter(letter);
     const seed = randomSeeds.find(s => s.letter === letter);
     if (!seed) return;
@@ -197,18 +207,16 @@ const App: React.FC = () => {
     setInterpretation(result);
     setIsAnalyzing(false);
 
-    // 生成解籤後的語音總結並自動播放
-    setIsGeneratingAudio(true);
 
-    // Initialize AudioContext early to capture user gesture
+    // Initialize/Get AudioContext via AudioGate
+    // Sync local ref with AudioGate's context
     if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
-    if (audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume();
+      audioContextRef.current = getAudioContext();
     }
 
+    setIsGeneratingAudio(true);
     const audioResult = await generateInterpretationAudio(apiKey, result, audioContextRef.current);
+
     if (audioResult) {
       setAudioBuffer(audioResult.buffer);
       setAudioBlob(audioResult.blob);
@@ -233,9 +241,9 @@ const App: React.FC = () => {
       audioSourceRef.current.stop();
     }
 
-    // Use persistent AudioContext
+    // Use persistent AudioContext from AudioGate if available, or fallback to ref
     if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContextRef.current = getAudioContext();
     }
     const ctx = audioContextRef.current;
 
