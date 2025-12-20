@@ -95,9 +95,14 @@ const App: React.FC = () => {
       [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
     }
 
-    // 取前 26 個不重複的數字配對給 A-Z
-    const seeds: RandomSeed[] = Array.from({ length: 26 }, (_, i) => ({
-      letter: String.fromCharCode(65 + i),
+    // Tiangan (10) and Dizhi (12)
+    const TIANGAN = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+    const DIZHI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+    const CARD_OPTIONS = [...TIANGAN, ...DIZHI]; // Total 22
+
+    // 取前 22 個不重複的數字配對給 Tiangan/Dizhi
+    const seeds: RandomSeed[] = Array.from({ length: 22 }, (_, i) => ({
+      letter: CARD_OPTIONS[i],
       number: numbers[i]
     }));
     setRandomSeeds(seeds);
@@ -376,7 +381,7 @@ const App: React.FC = () => {
             <p>© 靈曦籤苑 · 由 Gemini AI 驅動深層智慧</p>
             <p><a href="https://weisfx0705.github.io/chiawei/">義守大學陳嘉暐老師開發</a></p>
             <p style="font-style: italic; opacity: 0.6; margin-top: 16px;">「一切法從心想生，解籤僅供參考，未來掌握在您手中。」</p>
-            <p style="opacity: 0.4; margin-top: 8px; font-size: 0.7rem;">Version: 12/19/2025</p>
+            <p style="opacity: 0.4; margin-top: 8px; font-size: 0.7rem;">Version: 12/20/2025</p>
         </div>
     </div>
 </body>
@@ -466,10 +471,10 @@ const App: React.FC = () => {
           <div className="space-y-10 animate-in zoom-in duration-700 text-center">
             <div>
               <h2 className="text-3xl font-bold text-amber-400 mb-2">天意就在一念之間 ✨</h2>
-              <p className="text-slate-400 mb-8">閉上眼睛，感受冥冥之中的引導，選一個字母吧。</p>
+              <p className="text-slate-400 mb-8">閉上眼睛，感受冥冥之中的引導，選一張牌吧。</p>
             </div>
 
-            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-7 gap-4">
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4">
               {randomSeeds.map((seed) => (
                 <button
                   key={seed.letter}
@@ -660,7 +665,7 @@ const App: React.FC = () => {
           </a>
         </p>
         <p className="opacity-40 italic">「大師的話僅供參考，真的受傷了大師是不賠的。」💁‍♂️</p>
-        <p className="opacity-30 text-xs">Version: 12/19/2025</p>
+        <p className="opacity-30 text-xs">Version: 12/20/2025</p>
       </footer>
     </div>
   );
