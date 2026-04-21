@@ -164,7 +164,7 @@ export const generateInterpretationAudio = async (
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3.1-flash-tts-preview",
-      contents: [{ parts: [{ text: `唸出這段文字，要求台灣口音、年輕活力的聲音、情緒飽滿且語速輕快。Normal Pitched and Natural。${summaryText}` }] }],
+      contents: [{ parts: [{ text: `唸出這段文字，要求台灣口音、年輕活力的聲音。請使用自然的中低音(lower pitch)，語速適中且平穩，活潑但不誇張。${summaryText}` }] }],
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
