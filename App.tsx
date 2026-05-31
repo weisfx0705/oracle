@@ -5,6 +5,7 @@ import { POEMS, SVGS } from './constants';
 import { getGeminiInterpretation, generatePoemImage, generateInterpretationAudio } from './services/geminiService';
 import { unlock, playSfx, getAudioContext } from './services/AudioGate';
 import { SettingsModal } from './components/SettingsModal';
+import { CenteringGate } from './components/CenteringGate';
 
 // 隨機範例清單
 const QUESTION_PLACEHOLDERS = [
@@ -180,7 +181,8 @@ const App: React.FC = () => {
       setIsSettingsOpen(true);
       return;
     }
-    setStep(AppStep.PICKER);
+    // 送出問題後，先進入「心湖映月」靜心準備關卡，安定後才解鎖進選牌
+    setStep(AppStep.CENTERING);
   };
 
   const handlePick = async (letter: string) => {
@@ -473,6 +475,13 @@ const App: React.FC = () => {
               </button>
             </div>
           </div>
+        )}
+
+        {step === AppStep.CENTERING && (
+          <CenteringGate
+            onComplete={() => setStep(AppStep.PICKER)}
+            onBack={() => setStep(AppStep.QUESTION)}
+          />
         )}
 
         {step === AppStep.PICKER && (

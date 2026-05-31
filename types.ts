@@ -6,6 +6,7 @@ export interface Poem {
 
 export enum AppStep {
   QUESTION = 'question',
+  CENTERING = 'centering',
   PICKER = 'picker',
   RESULT = 'result',
 }
