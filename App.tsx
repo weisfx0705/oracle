@@ -53,7 +53,7 @@ const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
 };
 
 const App: React.FC = () => {
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('GEMINI_API_KEY') || process.env.API_KEY || '');
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('GEMINI_API_KEY') || '');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [step, setStep] = useState<AppStep>(AppStep.QUESTION);
   const [question, setQuestion] = useState('');

@@ -2,8 +2,6 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 import { Poem } from "../types";
 
-const API_KEY = process.env.API_KEY || "";
-
 export const getGeminiInterpretation = async (apiKey: string, question: string, poem: Poem): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey });
   const poemText = poem.content.join("，");
