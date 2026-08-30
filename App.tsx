@@ -445,7 +445,7 @@ const App: React.FC = () => {
         {step === AppStep.QUESTION && (
           <div className="space-y-10 animate-in fade-in slide-in-from-top-4 duration-1000">
             <div className="text-center">
-              <h2 className="text-3xl font-bold text-amber-400 mb-4">今日有何煩惱？🤔</h2>
+              <h2 className="text-3xl font-bold text-amber-400 mb-4">想問什麼問題？</h2>
               <p className="text-slate-400">請在下方輸入或訴說您的問題，大師為您指點迷津。</p>
             </div>
 
