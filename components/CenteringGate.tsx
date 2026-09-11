@@ -8,10 +8,10 @@ interface CenteringGateProps {
 }
 
 // ── 可微調參數 ───────────────────────────────────────────────
-const HOLD_DURATION_MS = 4500;   // 持續靜止填滿「澄澈度」所需時間（約 1-2 個呼吸週期）
-const DECAY_MS = 6000;           // 受擾／放開時，澄澈度回落到 0 所需時間（比累積慢很多，柔性不懲罰）
-const TOLERANCE_PX = 70;         // 容差半徑（寬鬆，容許行動裝置上自然的手指偏移）
-const SETTLE_DELAY_MS = 120;     // 超出容差後，需重新安定多久才再次視為「靜止」
+const HOLD_DURATION_MS = 3200;   // 持續靜止填滿「澄澈度」所需時間（手機上更容易完成）
+const DECAY_MS = 8000;           // 受擾／放開時，澄澈度回落到 0 所需時間（比累積慢很多，柔性不懲罰）
+const TOLERANCE_PX = 110;        // 容差半徑（寬鬆，容許行動裝置上自然的手指偏移）
+const SETTLE_DELAY_MS = 80;      // 超出容差後，需重新安定多久才再次視為「靜止」
 const BREATH_PERIOD_S = 3.5;     // 呼吸光環週期（秒）
 // ─────────────────────────────────────────────────────────────
 
@@ -129,7 +129,7 @@ export const CenteringGate: React.FC<CenteringGateProps> = ({ onComplete, onBack
   if (completed) statusText = '心已澄明，可以求籤了';
   else if (disturbed) statusText = '再靜一次，讓心湖平息';
   else if (holding) statusText = '心湖漸靜，保持凝神…';
-  else statusText = '將指尖（滑鼠）按住湖面中心';
+  else statusText = '將指尖（滑鼠）輕按湖面片刻';
 
   return (
     <div className="relative space-y-8 animate-in fade-in duration-1000 text-center select-none">
@@ -145,7 +145,7 @@ export const CenteringGate: React.FC<CenteringGateProps> = ({ onComplete, onBack
       <div className="pt-6">
         <h2 className="text-3xl font-bold text-amber-400 mb-3">心湖映月 🌙</h2>
         <p className="text-slate-400 leading-relaxed max-w-md mx-auto">
-          求籤之前，先讓心靜下來。將指尖（或滑鼠）輕輕按住水面中心，停駐片刻，靜心凝神，讓心湖恢復平靜。
+          求籤之前，先讓心靜下來。將指尖（或滑鼠）輕輕按住湖面，停駐片刻，靜心凝神，讓心湖恢復平靜。
         </p>
       </div>
 
@@ -155,9 +155,8 @@ export const CenteringGate: React.FC<CenteringGateProps> = ({ onComplete, onBack
         onPointerMove={handlePointerMove}
         onPointerUp={endHold}
         onPointerCancel={endHold}
-        onPointerLeave={endHold}
         style={{ touchAction: 'none' }}
-        className="relative mx-auto w-44 h-44 rounded-full overflow-hidden cursor-pointer
+        className="relative mx-auto w-52 h-52 sm:w-48 sm:h-48 rounded-full overflow-hidden cursor-pointer
                    bg-gradient-to-b from-slate-900 via-slate-950 to-black border border-slate-700/50 sacred-glow"
       >
         {/* 水面光暈 */}
