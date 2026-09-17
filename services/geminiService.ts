@@ -22,12 +22,8 @@ export const getGeminiInterpretation = async (apiKey: string, question: string, 
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-3.8-flash",
       contents: prompt,
-      config: {
-        temperature: 0.9,
-        topP: 0.95,
-      }
     });
     return response.text || "大師去買咖啡了，等會再說。☕️";
   } catch (error) {
@@ -44,7 +40,7 @@ export const generatePoemImage = async (apiKey: string, poem: Poem, customStyle:
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite-image",
+      model: "gemini-3.1-flash-image",
       contents: { parts: [{ text: prompt }] },
       config: {
         imageConfig: {
@@ -149,7 +145,7 @@ export const generateInterpretationAudio = async (
 
   // 1. 先生成 150 字的幽默總結文本
   const summaryResponse = await ai.models.generateContent({
-    model: "gemini-3.5-flash",
+    model: "gemini-3.5-flash-lite",
     contents: `請將以下解籤內容總結成一段約 150 字的口語稿。
     要求：台灣年輕男性的口吻，語氣非常現代、幽默、風趣且帶點「派」的感覺，說話要有力、速度快、情緒起伏大。
     內容要繁體中文，且適合朗讀。
